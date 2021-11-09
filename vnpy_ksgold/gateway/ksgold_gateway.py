@@ -471,16 +471,6 @@ class KsgoldTdApi(TdApi):
         """委托撤单失败回报"""
         self.gateway.write_error("交易撤单失败", error)
 
-    def onRspQueryMaxOrderVolume(
-        self,
-        data: dict,
-        error: dict,
-        reqid: int,
-        last: bool
-    ) -> None:
-        """"""
-        pass
-
     def onRspQryInvestorPosition(
         self,
         data: dict,
