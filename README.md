@@ -61,3 +61,6 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+## 连接
+
+连接前请先复制vnpy_ksgold.vnpy_ksgold.api文件夹下SLEdll文件夹, 放置在python.exe同级文件夹下。

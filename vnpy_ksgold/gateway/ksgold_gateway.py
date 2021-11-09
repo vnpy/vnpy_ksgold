@@ -1,6 +1,3 @@
-"""
-Put SLEdll folder in the path of python.exe
-"""
 import pytz
 import sys
 from datetime import datetime
