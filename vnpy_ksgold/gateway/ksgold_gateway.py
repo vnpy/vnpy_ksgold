@@ -3,7 +3,7 @@ import pytz
 import sys
 from datetime import datetime
 from time import sleep
-from typing import Dict, List, Set, Tuple, Any
+from typing import Dict, List, Set, Any
 
 from vnpy.event import EventEngine
 from ..api import (
