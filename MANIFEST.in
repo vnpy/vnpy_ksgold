@@ -1,0 +1,1 @@
+recursive-include vnpy_ksgold *.dll *.so *.pyd *.h *.cpp
