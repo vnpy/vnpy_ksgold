@@ -323,7 +323,7 @@ class KsgoldMdApi(MdApi):
         # 禁止重复发起连接，会导致异常崩溃
         if not self.connect_status:
             path: Path = get_folder_path(self.gateway_name.lower())
-            self.createGoldQutoApi(str(path) + "\\Md")
+            self.createGoldQutoApi((str(path) + "\\Md").encode("GBK"))
 
             self.registerFront(address)
             self.init()
@@ -655,7 +655,7 @@ class KsgoldTdApi(TdApi):
 
         if not self.connect_status:
             path = get_folder_path(self.gateway_name.lower())
-            self.createGoldTraderApi(str(path) + "\\Td")
+            self.createGoldTraderApi((str(path) + "\\Td").encode("GBK"))
 
             self.subscribePrivateTopic(0)
             self.subscribePublicTopic(0)
