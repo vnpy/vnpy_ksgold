@@ -3,7 +3,7 @@ import sys
 from datetime import datetime
 from time import sleep
 
-from vnpy.api.ksgold import (
+from ..api import (
     MdApi,
     TdApi,
     KS_Entrust_Sending,
