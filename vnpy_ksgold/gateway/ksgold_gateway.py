@@ -78,11 +78,9 @@ OFFSET_KSGOLD2VT[48] = Offset.OPEN
 MAX_FLOAT = sys.float_info.max                  # 浮点数极限值
 CHINA_TZ = pytz.timezone("Asia/Shanghai")       # 中国时区
 
-# 全局缓存字典
-symbol_exchange_map = {}
-symbol_name_map = {}
-symbol_size_map = {}
-symbol_market_map = {}
+# 合约数据全局缓存字典
+symbol_contract_map: Dict[str, ContractData] = {}
+symbol_market_map: Dict[str, str] = {}
 localid_orderid_map = {}
 orderid_localid_map = {}
 
@@ -256,8 +254,8 @@ class KsgoldMdApi(MdApi):
     def onRtnDepthMarketData(self, data: dict) -> None:
         """行情数据推送"""
         symbol: str = data["InstID"]
-        exchange: Exchange = symbol_exchange_map.get(symbol, "")
-        if not exchange:
+        contract: ContractData = symbol_contract_map.get(symbol, None)
+        if not contract:
             return
 
         timestamp: str = f"{data['QuoteDate']} {data['QuoteTime']}.{int(data['UpdateMillisec']/100)}"
@@ -266,9 +264,9 @@ class KsgoldMdApi(MdApi):
 
         tick: TickData = TickData(
             symbol=symbol,
-            exchange=exchange,
+            exchange=contract.exchange,
             datetime=dt,
-            name=symbol_name_map[symbol],
+            name=contract.name,
             volume=data["Volume"],
             open_interest=data["OpenInt"],
             last_price=data["Last"],
@@ -380,6 +378,7 @@ class KsgoldTdApi(TdApi):
         self.trade_code: str = ""
         self.login_type: int = 0
         self.seat_no: int = 0
+        self.contract_inited: bool = False
 
         self.frontid: int = 0
         self.sessionid: int = 0
@@ -443,11 +442,11 @@ class KsgoldTdApi(TdApi):
         orderid: str = f"{self.frontid}_{self.sessionid}_{order_ref}"
 
         symbol: str = data["InstID"]
-        exchange: Exchange = symbol_exchange_map[symbol]
+        contract: ContractData = symbol_contract_map[symbol]
 
         order: OrderData = OrderData(
             symbol=symbol,
-            exchange=exchange,
+            exchange=contract.exchange,
             orderid=orderid,
             direction=DIRECTION_KSGOLD2VT[data["BuyOrSell"]],
             offset=OFFSET_KSGOLD2VT.get(data["OffsetFlag"], Offset.NONE),
@@ -557,12 +556,11 @@ class KsgoldTdApi(TdApi):
 
         self.gateway.on_contract(contract)
 
-        symbol_exchange_map[contract.symbol] = contract.exchange
-        symbol_name_map[contract.symbol] = contract.name
-        symbol_size_map[contract.symbol] = contract.size
+        symbol_contract_map[contract.symbol] = contract
         symbol_market_map[contract.symbol] = data["MarketID"]
 
         if last:
+            self.contract_inited = True
             self.gateway.write_log("合约信息查询成功")
 
             for data in self.order_data:
@@ -575,11 +573,12 @@ class KsgoldTdApi(TdApi):
 
     def onRtnOrder(self, data: dict) -> None:
         """委托更新推送"""
-        symbol: str = data["InstID"]
-        exchange: Exchange = symbol_exchange_map.get(symbol, "")
-        if not exchange:
+        if not self.contract_inited:
             self.order_data.append(data)
             return
+
+        symbol: str = data["InstID"]
+        contract: ContractData = symbol_contract_map[symbol]
 
         frontid: int = data["FrontID"]
         sessionid: int = data["SessionID"]
@@ -597,7 +596,7 @@ class KsgoldTdApi(TdApi):
 
         order: OrderData = OrderData(
             symbol=symbol,
-            exchange=exchange,
+            exchange=contract.exchange,
             orderid=orderid,
             direction=DIRECTION_KSGOLD2VT[data["BuyOrSell"]],
             offset=OFFSET_KSGOLD2VT[data["OffsetFlag"]],
@@ -614,11 +613,12 @@ class KsgoldTdApi(TdApi):
 
     def onRtnTrade(self, data: dict) -> None:
         """成交数据推送"""
-        symbol: str = data["InstID"]
-        exchange: Exchange = symbol_exchange_map.get(symbol, "")
-        if not exchange:
+        if not self.contract_inited:
             self.trade_data.append(data)
             return
+
+        symbol: str = data["InstID"]
+        contract: ContractData = symbol_contract_map[symbol]
 
         orderid: str = self.sysid_orderid_map[data["OrderNo"]]
 
@@ -629,7 +629,7 @@ class KsgoldTdApi(TdApi):
 
         trade: TradeData = TradeData(
             symbol=symbol,
-            exchange=exchange,
+            exchange=contract.exchange,
             orderid=orderid,
             tradeid=data["MatchNo"],
             direction=DIRECTION_KSGOLD2VT[data["BuyOrSell"]],
@@ -725,7 +725,7 @@ class KsgoldTdApi(TdApi):
 
     def query_position(self) -> None:
         """查询持仓"""
-        if not symbol_exchange_map:
+        if not symbol_contract_map:
             return
 
         self.reqid += 1
