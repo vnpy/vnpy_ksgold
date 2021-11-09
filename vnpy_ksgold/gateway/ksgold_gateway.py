@@ -81,8 +81,6 @@ CHINA_TZ = pytz.timezone("Asia/Shanghai")       # 中国时区
 # 合约数据全局缓存字典
 symbol_contract_map: Dict[str, ContractData] = {}
 symbol_market_map: Dict[str, str] = {}
-localid_orderid_map = {}
-orderid_localid_map = {}
 
 
 class KsgoldGateway(BaseGateway):
@@ -387,6 +385,7 @@ class KsgoldTdApi(TdApi):
         self.trade_data: List[dict] = []
         self.positions: Dict[str, PositionData] = {}
         self.sysid_orderid_map: Dict[str, str] = {}
+        self.orderid_localid_map: Dict[str, str] = {}
 
     def onFrontConnected(self, result: int) -> None:
         """服务器连接成功回报"""
@@ -586,8 +585,7 @@ class KsgoldTdApi(TdApi):
         localid: int = data["LocalOrderNo"]
         orderid: str = f"{frontid}_{sessionid}_{order_ref}"
 
-        orderid_localid_map[orderid] = localid
-        localid_orderid_map[localid] = orderid
+        self.orderid_localid_map[orderid] = localid
 
         today: str = datetime.now().strftime("%Y%m%d")
         timestamp: str = f"{today} {data['EntrustTime']}"
@@ -712,7 +710,7 @@ class KsgoldTdApi(TdApi):
 
     def cancel_order(self, req: CancelRequest) -> None:
         """委托撤单"""
-        localid: str = orderid_localid_map[req.orderid]
+        localid: str = self.orderid_localid_map[req.orderid]
         ksgold_req: dict = {"LocalOrderNo": localid}
 
         self.reqid += 1
