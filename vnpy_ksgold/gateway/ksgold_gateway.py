@@ -88,6 +88,8 @@ class KsgoldGateway(BaseGateway):
     vn.py用于对接金仕达黄金TD交易的接口。
     """
 
+    default_name: str = "KSGOLD"
+
     default_setting: Dict[str, Any] = {
         "用户名": "",
         "密码": "",
@@ -98,7 +100,7 @@ class KsgoldGateway(BaseGateway):
 
     exchanges: Exchange = [Exchange.SGE]
 
-    def __init__(self, event_engine: EventEngine, gateway_name: str = "KSGOLD") -> None:
+    def __init__(self, event_engine: EventEngine, gateway_name: str) -> None:
         """构造函数"""
         super().__init__(event_engine, gateway_name)
 
