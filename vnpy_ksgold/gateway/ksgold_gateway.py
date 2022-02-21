@@ -85,7 +85,7 @@ symbol_market_map: Dict[str, str] = {}
 
 class KsgoldGateway(BaseGateway):
     """
-    vn.py用于对接金仕达黄金TD交易的接口。
+    VeighNa用于对接金仕达黄金TD交易的接口。
     """
 
     default_name: str = "KSGOLD"
