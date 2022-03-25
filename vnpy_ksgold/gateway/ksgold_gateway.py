@@ -1,28 +1,11 @@
-from pathlib import Path
 import pytz
 import sys
 from datetime import datetime
 from time import sleep
-from typing import Dict, List, Set, Any
+from typing import Dict, List, Any
+from pathlib import Path
 
 from vnpy.event import EventEngine
-from ..api import (
-    MdApi,
-    TdApi,
-    KS_Entrust_Sending,
-    KS_Entrust_Waiting,
-    KS_Entrust_Error,
-    KS_Entrust_In,
-    KS_Entrust_Part_Done,
-    KS_Entrust_All_Done,
-    KS_Entrust_All_Cancel,
-    KS_Entrust_Part_Done_Cancel,
-    KS_Entrust_Wait_Cancel,
-    KS_BUY,
-    KS_SELL,
-    KS_P_OPEN,
-    KS_P_OFFSET,
-)
 from vnpy.trader.constant import (
     Direction,
     Offset,
@@ -44,6 +27,24 @@ from vnpy.trader.object import (
 )
 from vnpy.trader.utility import get_folder_path
 from vnpy.trader.event import EVENT_TIMER
+
+from ..api import (
+    MdApi,
+    TdApi,
+    KS_Entrust_Sending,
+    KS_Entrust_Waiting,
+    KS_Entrust_Error,
+    KS_Entrust_In,
+    KS_Entrust_Part_Done,
+    KS_Entrust_All_Done,
+    KS_Entrust_All_Cancel,
+    KS_Entrust_Part_Done_Cancel,
+    KS_Entrust_Wait_Cancel,
+    KS_BUY,
+    KS_SELL,
+    KS_P_OPEN,
+    KS_P_OFFSET,
+)
 
 
 # 委托状态映射
@@ -98,7 +99,7 @@ class KsgoldGateway(BaseGateway):
         "账号类型": ["银行账号", "黄金账号"]
     }
 
-    exchanges: Exchange = [Exchange.SGE]
+    exchanges: List[Exchange] = [Exchange.SGE]
 
     def __init__(self, event_engine: EventEngine, gateway_name: str) -> None:
         """构造函数"""
@@ -116,9 +117,9 @@ class KsgoldGateway(BaseGateway):
         md_address: str = setting["行情服务器"]
 
         if accout_type == "银行账号":
-            login_type = 1
+            login_type: int = 1
         else:
-            login_type = 2
+            login_type: int = 2
 
         if (
             (not td_address.startswith("tcp://"))
@@ -201,7 +202,7 @@ class KsgoldMdApi(MdApi):
 
         self.connect_status: bool = False
         self.login_status: bool = False
-        self.subscribed: Set = set()
+        self.subscribed: set = set()
 
         self.userid: str = ""
         self.password: str = ""
@@ -654,7 +655,7 @@ class KsgoldTdApi(TdApi):
         self.login_type = login_type
 
         if not self.connect_status:
-            path = get_folder_path(self.gateway_name.lower())
+            path: Path = get_folder_path(self.gateway_name.lower())
             self.createGoldTraderApi((str(path) + "\\Td").encode("GBK"))
 
             self.subscribePrivateTopic(0)
