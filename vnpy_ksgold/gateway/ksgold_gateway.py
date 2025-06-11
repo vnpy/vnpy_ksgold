@@ -4,7 +4,7 @@ from time import sleep
 from typing import Any
 from pathlib import Path
 
-from vnpy.event import EventEngine
+from vnpy.event import EventEngine, Event
 from vnpy.trader.constant import (
     Direction,
     Offset,
@@ -72,11 +72,11 @@ OFFSET_VT2KSGOLD: dict[Offset, str] = {
     Offset.CLOSE: KS_P_OFFSET,
 }
 OFFSET_KSGOLD2VT: dict[str, Offset] = {v: k for k, v in OFFSET_VT2KSGOLD.items()}
-OFFSET_KSGOLD2VT[48] = Offset.OPEN
+OFFSET_KSGOLD2VT[48] = Offset.OPEN              # type: ignore
 
 # 其他常量
 MAX_FLOAT = sys.float_info.max                  # 浮点数极限值
-CHINA_TZ = ZoneInfo("Asia/Shanghai")       # 中国时区
+CHINA_TZ = ZoneInfo("Asia/Shanghai")            # 中国时区
 
 # 合约数据全局缓存字典
 symbol_contract_map: dict[str, ContractData] = {}
@@ -107,6 +107,8 @@ class KsgoldGateway(BaseGateway):
         self.td_api: KsgoldTdApi = KsgoldTdApi(self)
         self.md_api: KsgoldMdApi = KsgoldMdApi(self)
 
+        self.count: int = 0
+
     def connect(self, setting: dict) -> None:
         """连接交易接口"""
         userid: str = setting["用户名"]
@@ -118,7 +120,7 @@ class KsgoldGateway(BaseGateway):
         if accout_type == "银行账号":
             login_type: int = 1
         else:
-            login_type: int = 2
+            login_type = 2
 
         if (
             (not td_address.startswith("tcp://"))
@@ -166,10 +168,10 @@ class KsgoldGateway(BaseGateway):
         """输出错误信息日志"""
         error_id: int = error["ErrorID"]
         error_msg: str = error["ErrorMsg"]
-        msg: str = f"{msg}，代码：{error_id}，信息：{error_msg}"
+        msg = f"{msg}，代码：{error_id}，信息：{error_msg}"
         self.write_log(msg)
 
-    def process_timer_event(self, event) -> None:
+    def process_timer_event(self, event: Event) -> None:
         """定时事件处理"""
         self.count += 1
         if self.count < 2:
@@ -182,7 +184,7 @@ class KsgoldGateway(BaseGateway):
 
     def init_query(self) -> None:
         """初始化查询任务"""
-        self.count: int = 0
+        self.count = 0
         self.query_functions: list = [self.query_account, self.query_position]
         self.event_engine.register(EVENT_TIMER, self.process_timer_event)
 
@@ -260,7 +262,7 @@ class KsgoldMdApi(MdApi):
 
         timestamp: str = f"{data['QuoteDate']} {data['QuoteTime']}.{int(data['UpdateMillisec']/100)}"
         dt: datetime = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S.%f")
-        dt: datetime = dt.replace(tzinfo=CHINA_TZ)
+        dt = dt.replace(tzinfo=CHINA_TZ)
 
         tick: TickData = TickData(
             symbol=symbol,
@@ -584,7 +586,7 @@ class KsgoldTdApi(TdApi):
         frontid: int = data["FrontID"]
         sessionid: int = data["SessionID"]
         order_ref: str = data["OrderRef"]
-        localid: int = data["LocalOrderNo"]
+        localid: str = data["LocalOrderNo"]
         orderid: str = f"{frontid}_{sessionid}_{order_ref}"
 
         self.orderid_localid_map[orderid] = localid
@@ -592,7 +594,7 @@ class KsgoldTdApi(TdApi):
         today: str = datetime.now().strftime("%Y%m%d")
         timestamp: str = f"{today} {data['EntrustTime']}"
         dt: datetime = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S")
-        dt: datetime = dt.replace(tzinfo=CHINA_TZ)
+        dt = dt.replace(tzinfo=CHINA_TZ)
 
         order: OrderData = OrderData(
             symbol=symbol,
@@ -625,7 +627,7 @@ class KsgoldTdApi(TdApi):
         today: str = datetime.now().strftime("%Y%m%d")
         timestamp: str = f"{today} {data['MatchTime']}"
         dt: datetime = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S")
-        dt: datetime = dt.replace(tzinfo=CHINA_TZ)
+        dt = dt.replace(tzinfo=CHINA_TZ)
 
         trade: TradeData = TradeData(
             symbol=symbol,
@@ -708,7 +710,8 @@ class KsgoldTdApi(TdApi):
         order: OrderData = req.create_order_data(orderid, self.gateway_name)
         self.gateway.on_order(order)
 
-        return order.vt_orderid
+        vt_orderid: str = order.vt_orderid
+        return vt_orderid
 
     def cancel_order(self, req: CancelRequest) -> None:
         """委托撤单"""
