@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v1
@@ -14,8 +14,21 @@ jobs:
         python-version: '3.13'
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip
-        pip install ta-lib==0.6.3 --index=https://pypi.vnpy.com
+        python -m pip install --upgrade pip wheel --index https://pypi.vnpy.com
+        # Install numpy first
+        python -m pip install numpy==1.23.1 --index https://pypi.vnpy.com
+        # Build and install ta-lib
+        pushd /tmp
+        wget https://pip.vnpy.com/colletion/ta-lib-0.6.3-src.tar.gz
+        tar -xf ta-lib-0.6.3-src.tar.gz
+        cd ta-lib
+        ./configure --prefix=/usr/local
+        make -j1
+        sudo make install
+        popd
+        # Install ta-lib Python package
+        python -m pip install ta-lib==0.6.3 --index https://pypi.vnpy.com
+        # Install other dependencies
         pip install vnpy ruff mypy uv
     - name: Lint with ruff
       run: |
