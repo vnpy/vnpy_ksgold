@@ -15,6 +15,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip wheel --index https://pypi.vnpy.com
+        # Install numpy first
+        python -m pip install numpy --index https://pypi.vnpy.com
         # Build and install ta-lib
         pushd /tmp
         wget https://pip.vnpy.com/colletion/ta-lib-0.6.3-src.tar.gz
