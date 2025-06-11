@@ -18,7 +18,8 @@ jobs:
         # Build and install ta-lib
         pushd /tmp
         wget https://pip.vnpy.com/colletion/ta-lib-0.6.3-src.tar.gz
-        tar -xf ta-lib-0.6.3-src.tar.gz
+        mkdir -p ta-lib
+        tar -xf ta-lib-0.6.3-src.tar.gz -C ta-lib --strip-components=1
         cd ta-lib
         ./configure --prefix=/usr/local
         make -j1
