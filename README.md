@@ -5,9 +5,9 @@
 </p>
 
 <p align="center">
-    <img src ="https://img.shields.io/badge/version-1.0.2-blueviolet.svg"/>
+    <img src ="https://img.shields.io/badge/version-1.0.3-blueviolet.svg"/>
     <img src ="https://img.shields.io/badge/platform-linux-yellow.svg"/>
-    <img src ="https://img.shields.io/badge/python-3.7|3.8|3.9|3.10-blue.svg" />
+    <img src ="https://img.shields.io/badge/python-3.10|3.11|3.12|3.13-blue.svg" />
     <img src ="https://img.shields.io/github/license/vnpy/vnpy.svg?color=orange"/>
 </p>
 
@@ -17,7 +17,7 @@
 
 ## 安装
 
-安装环境推荐基于3.3.0版本以上的【[**VeighNa Studio**](https://www.vnpy.com)】。
+安装环境推荐基于4.0.0版本以上的【[**VeighNa Studio**](https://www.vnpy.com)】。
 
 直接使用pip命令：
 
@@ -31,6 +31,13 @@ pip install vnpy_ksgold
 ```
 pip install .
 ```
+
+如果需要以**开发模式**安装到当前Python环境，可以使用下述命令：
+
+```
+pip install -e . --no-build-isolation --config-settings=build-dir=.\vnpy_ksgold\api
+```
+
 
 ## 使用
 

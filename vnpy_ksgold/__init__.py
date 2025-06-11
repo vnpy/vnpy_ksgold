@@ -26,6 +26,9 @@ import importlib_metadata
 from .gateway import KsgoldGateway
 
 
+__all__ = ["KsgoldGateway"]
+
+
 try:
     __version__ = importlib_metadata.version("vnpy_ksgold")
 except importlib_metadata.PackageNotFoundError:
