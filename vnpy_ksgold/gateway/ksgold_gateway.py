@@ -1,10 +1,10 @@
 import sys
 from datetime import datetime
 from time import sleep
-from typing import Dict, List, Any
+from typing import Any
 from pathlib import Path
 
-from vnpy.event import EventEngine
+from vnpy.event import EventEngine, Event
 from vnpy.trader.constant import (
     Direction,
     Offset,
@@ -47,7 +47,7 @@ from ..api import (
 
 
 # 委托状态映射
-STATUS_KSGOLD2VT: Dict[str, Status] = {
+STATUS_KSGOLD2VT: dict[str, Status] = {
     KS_Entrust_Sending: Status.SUBMITTING,
     KS_Entrust_Waiting: Status.NOTTRADED,
     KS_Entrust_Error: Status.REJECTED,
@@ -60,27 +60,27 @@ STATUS_KSGOLD2VT: Dict[str, Status] = {
 }
 
 # 多空方向映射
-DIRECTION_VT2KSGOLD: Dict[Direction, str] = {
+DIRECTION_VT2KSGOLD: dict[Direction, str] = {
     Direction.LONG: KS_BUY,
     Direction.SHORT: KS_SELL
 }
-DIRECTION_KSGOLD2VT: Dict[str, Direction] = {v: k for k, v in DIRECTION_VT2KSGOLD.items()}
+DIRECTION_KSGOLD2VT: dict[str, Direction] = {v: k for k, v in DIRECTION_VT2KSGOLD.items()}
 
 # 开平方向映射
-OFFSET_VT2KSGOLD: Dict[Offset, str] = {
+OFFSET_VT2KSGOLD: dict[Offset, str] = {
     Offset.OPEN: KS_P_OPEN,
     Offset.CLOSE: KS_P_OFFSET,
 }
-OFFSET_KSGOLD2VT: Dict[str, Offset] = {v: k for k, v in OFFSET_VT2KSGOLD.items()}
-OFFSET_KSGOLD2VT[48] = Offset.OPEN
+OFFSET_KSGOLD2VT: dict[str, Offset] = {v: k for k, v in OFFSET_VT2KSGOLD.items()}
+OFFSET_KSGOLD2VT[48] = Offset.OPEN              # type: ignore
 
 # 其他常量
 MAX_FLOAT = sys.float_info.max                  # 浮点数极限值
-CHINA_TZ = ZoneInfo("Asia/Shanghai")       # 中国时区
+CHINA_TZ = ZoneInfo("Asia/Shanghai")            # 中国时区
 
 # 合约数据全局缓存字典
-symbol_contract_map: Dict[str, ContractData] = {}
-symbol_market_map: Dict[str, str] = {}
+symbol_contract_map: dict[str, ContractData] = {}
+symbol_market_map: dict[str, str] = {}
 
 
 class KsgoldGateway(BaseGateway):
@@ -90,7 +90,7 @@ class KsgoldGateway(BaseGateway):
 
     default_name: str = "KSGOLD"
 
-    default_setting: Dict[str, Any] = {
+    default_setting: dict[str, Any] = {
         "用户名": "",
         "密码": "",
         "交易服务器": "",
@@ -98,14 +98,16 @@ class KsgoldGateway(BaseGateway):
         "账号类型": ["银行账号", "黄金账号"]
     }
 
-    exchanges: List[Exchange] = [Exchange.SGE]
+    exchanges: list[Exchange] = [Exchange.SGE]
 
     def __init__(self, event_engine: EventEngine, gateway_name: str) -> None:
         """构造函数"""
         super().__init__(event_engine, gateway_name)
 
-        self.td_api: "KsgoldTdApi" = KsgoldTdApi(self)
-        self.md_api: "KsgoldMdApi" = KsgoldMdApi(self)
+        self.td_api: KsgoldTdApi = KsgoldTdApi(self)
+        self.md_api: KsgoldMdApi = KsgoldMdApi(self)
+
+        self.count: int = 0
 
     def connect(self, setting: dict) -> None:
         """连接交易接口"""
@@ -118,7 +120,7 @@ class KsgoldGateway(BaseGateway):
         if accout_type == "银行账号":
             login_type: int = 1
         else:
-            login_type: int = 2
+            login_type = 2
 
         if (
             (not td_address.startswith("tcp://"))
@@ -166,10 +168,10 @@ class KsgoldGateway(BaseGateway):
         """输出错误信息日志"""
         error_id: int = error["ErrorID"]
         error_msg: str = error["ErrorMsg"]
-        msg: str = f"{msg}，代码：{error_id}，信息：{error_msg}"
+        msg = f"{msg}，代码：{error_id}，信息：{error_msg}"
         self.write_log(msg)
 
-    def process_timer_event(self, event) -> None:
+    def process_timer_event(self, event: Event) -> None:
         """定时事件处理"""
         self.count += 1
         if self.count < 2:
@@ -182,7 +184,7 @@ class KsgoldGateway(BaseGateway):
 
     def init_query(self) -> None:
         """初始化查询任务"""
-        self.count: int = 0
+        self.count = 0
         self.query_functions: list = [self.query_account, self.query_position]
         self.event_engine.register(EVENT_TIMER, self.process_timer_event)
 
@@ -260,7 +262,7 @@ class KsgoldMdApi(MdApi):
 
         timestamp: str = f"{data['QuoteDate']} {data['QuoteTime']}.{int(data['UpdateMillisec']/100)}"
         dt: datetime = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S.%f")
-        dt: datetime = dt.replace(tzinfo=CHINA_TZ)
+        dt = dt.replace(tzinfo=CHINA_TZ)
 
         tick: TickData = TickData(
             symbol=symbol,
@@ -383,11 +385,11 @@ class KsgoldTdApi(TdApi):
         self.frontid: int = 0
         self.sessionid: int = 0
 
-        self.order_data: List[dict] = []
-        self.trade_data: List[dict] = []
-        self.positions: Dict[str, PositionData] = {}
-        self.sysid_orderid_map: Dict[str, str] = {}
-        self.orderid_localid_map: Dict[str, str] = {}
+        self.order_data: list[dict] = []
+        self.trade_data: list[dict] = []
+        self.positions: dict[str, PositionData] = {}
+        self.sysid_orderid_map: dict[str, str] = {}
+        self.orderid_localid_map: dict[str, str] = {}
 
     def onFrontConnected(self, result: int) -> None:
         """服务器连接成功回报"""
@@ -584,7 +586,7 @@ class KsgoldTdApi(TdApi):
         frontid: int = data["FrontID"]
         sessionid: int = data["SessionID"]
         order_ref: str = data["OrderRef"]
-        localid: int = data["LocalOrderNo"]
+        localid: str = data["LocalOrderNo"]
         orderid: str = f"{frontid}_{sessionid}_{order_ref}"
 
         self.orderid_localid_map[orderid] = localid
@@ -592,7 +594,7 @@ class KsgoldTdApi(TdApi):
         today: str = datetime.now().strftime("%Y%m%d")
         timestamp: str = f"{today} {data['EntrustTime']}"
         dt: datetime = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S")
-        dt: datetime = dt.replace(tzinfo=CHINA_TZ)
+        dt = dt.replace(tzinfo=CHINA_TZ)
 
         order: OrderData = OrderData(
             symbol=symbol,
@@ -625,7 +627,7 @@ class KsgoldTdApi(TdApi):
         today: str = datetime.now().strftime("%Y%m%d")
         timestamp: str = f"{today} {data['MatchTime']}"
         dt: datetime = datetime.strptime(timestamp, "%Y%m%d %H:%M:%S")
-        dt: datetime = dt.replace(tzinfo=CHINA_TZ)
+        dt = dt.replace(tzinfo=CHINA_TZ)
 
         trade: TradeData = TradeData(
             symbol=symbol,
@@ -708,7 +710,8 @@ class KsgoldTdApi(TdApi):
         order: OrderData = req.create_order_data(orderid, self.gateway_name)
         self.gateway.on_order(order)
 
-        return order.vt_orderid
+        vt_orderid: str = order.vt_orderid
+        return vt_orderid
 
     def cancel_order(self, req: CancelRequest) -> None:
         """委托撤单"""

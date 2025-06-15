@@ -1,0 +1,45 @@
+name: Python application
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.13
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.13'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip wheel --index https://pypi.vnpy.com
+        # Install numpy first
+        python -m pip install numpy --index https://pypi.vnpy.com
+        # Build and install ta-lib
+        pushd /tmp
+        wget https://pip.vnpy.com/colletion/ta-lib-0.6.3-src.tar.gz
+        mkdir -p ta-lib
+        tar -xf ta-lib-0.6.3-src.tar.gz -C ta-lib --strip-components=1
+        cd ta-lib
+        ./configure --prefix=/usr/local
+        make -j1
+        sudo make install
+        popd
+        # Install ta-lib Python package
+        python -m pip install ta-lib==0.6.3 --index https://pypi.vnpy.com
+        # Install other dependencies
+        pip install vnpy ruff mypy uv
+    - name: Lint with ruff
+      run: |
+        # Run ruff linter based on pyproject.toml configuration
+        ruff check .
+    - name: Type check with mypy
+      run: |
+        # Run mypy type checking based on pyproject.toml configuration
+        mypy vnpy_ksgold
+    - name: Build packages with uv
+      run: |
+        # Build source distribution and wheel distribution
+        uv build --sdist
