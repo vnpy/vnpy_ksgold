@@ -1,3 +1,5 @@
+"""金仕达黄金 TD 接口常量。"""
+
 KS_SPOT = "00"
 KS_DEFER = "10"
 KS_FUTURES = "11"

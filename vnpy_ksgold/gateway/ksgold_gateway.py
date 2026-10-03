@@ -1,3 +1,5 @@
+"""实现金仕达黄金 TD 交易接口。"""
+
 import sys
 from datetime import datetime
 from time import sleep
@@ -190,7 +192,7 @@ class KsgoldGateway(BaseGateway):
 
 
 class KsgoldMdApi(MdApi):
-    """"""
+    """对接金仕达黄金 TD 的行情接口。"""
 
     def __init__(self, gateway: KsgoldGateway) -> None:
         """构造函数"""
@@ -359,7 +361,7 @@ class KsgoldMdApi(MdApi):
 
 
 class KsgoldTdApi(TdApi):
-    """"""
+    """对接金仕达黄金 TD 的交易接口。"""
 
     def __init__(self, gateway: KsgoldGateway) -> None:
         """构造函数"""
