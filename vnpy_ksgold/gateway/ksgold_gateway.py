@@ -3,7 +3,6 @@
 import sys
 from datetime import datetime
 from time import sleep
-from typing import Any
 from pathlib import Path
 
 from vnpy.event import EventEngine, Event
@@ -92,12 +91,13 @@ class KsgoldGateway(BaseGateway):
 
     default_name: str = "KSGOLD"
 
-    default_setting: dict[str, Any] = {
+    # 账号类型是 list[str]，不在基类 default_setting 的值类型中。
+    default_setting: dict[str, str | int | float | bool] = {
         "用户名": "",
         "密码": "",
         "交易服务器": "",
         "行情服务器": "",
-        "账号类型": ["银行账号", "黄金账号"]
+        "账号类型": ["银行账号", "黄金账号"]  # type: ignore[dict-item]
     }
 
     exchanges: list[Exchange] = [Exchange.SGE]
@@ -258,7 +258,7 @@ class KsgoldMdApi(MdApi):
     def onRtnDepthMarketData(self, data: dict) -> None:
         """行情数据推送"""
         symbol: str = data["InstID"]
-        contract: ContractData = symbol_contract_map.get(symbol, None)
+        contract: ContractData | None = symbol_contract_map.get(symbol, None)
         if not contract:
             return
 
