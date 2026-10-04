@@ -1,5 +1,6 @@
 """实现金仕达黄金 TD 交易接口。"""
 
+from collections.abc import Callable
 import sys
 from datetime import datetime
 from time import sleep
@@ -76,8 +77,8 @@ OFFSET_KSGOLD2VT: dict[str, Offset] = {v: k for k, v in OFFSET_VT2KSGOLD.items()
 OFFSET_KSGOLD2VT[48] = Offset.OPEN              # type: ignore
 
 # 其他常量
-MAX_FLOAT = sys.float_info.max                  # 浮点数极限值
-CHINA_TZ = ZoneInfo("Asia/Shanghai")            # 中国时区
+MAX_FLOAT: float = sys.float_info.max                  # 浮点数极限值
+CHINA_TZ: ZoneInfo = ZoneInfo("Asia/Shanghai")            # 中国时区
 
 # 合约数据全局缓存字典
 symbol_contract_map: dict[str, ContractData] = {}
@@ -180,7 +181,7 @@ class KsgoldGateway(BaseGateway):
             return
         self.count = 0
 
-        func = self.query_functions.pop(0)
+        func: Callable[[], None] = self.query_functions.pop(0)
         func()
         self.query_functions.append(func)
 
@@ -233,6 +234,7 @@ class KsgoldMdApi(MdApi):
             self.login_status = True
             self.gateway.write_log("行情服务器登录成功")
 
+            symbol: str
             for symbol in self.subscribed:
                 self.subscribeMarketData(symbol)
         else:
