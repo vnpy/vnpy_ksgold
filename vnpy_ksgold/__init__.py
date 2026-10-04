@@ -22,7 +22,7 @@
 """VeighNa 金仕达黄金 TD 交易接口。"""
 
 
-import importlib_metadata
+from importlib import metadata
 
 from .gateway import KsgoldGateway
 
@@ -31,6 +31,6 @@ __all__ = ["KsgoldGateway"]
 
 
 try:
-    __version__ = importlib_metadata.version("vnpy_ksgold")
-except importlib_metadata.PackageNotFoundError:
+    __version__ = metadata.version("vnpy_ksgold")
+except metadata.PackageNotFoundError:
     __version__ = "dev"
