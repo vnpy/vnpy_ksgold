@@ -1,6 +1,6 @@
 [project]
 name = "vnpy_ksgold"
-version = "1.0.3"
+version = "1.0.4"
 description = "CTP gateway for vn.py quant trading framework."
 readme = "README.md"
 license = {text = "MIT"}
